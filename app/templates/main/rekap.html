@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Rekap Database - Sensus Penduduk</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap"
+      rel="stylesheet"
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              primary: {
+                50: "#f0f9ff",
+                100: "#e0f2fe",
+                200: "#bae6fd",
+                300: "#7dd3fc",
+                400: "#38bdf8",
+                500: "#0ea5e9",
+                600: "#0284c7",
+                700: "#0369a1",
+                800: "#075985",
+                900: "#0c4a6e",
+                950: "#082f49",
+              },
+            },
+            fontFamily: {
+              'poppins': ['Poppins', 'sans-serif'],
+            },
+          },
+        },
+      };
+    </script>
+    <style>
+      body {
+        font-family: 'Poppins', sans-serif;
+        background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+        min-height: 100vh;
+        margin: 0;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+
+      .header {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.1);
+        padding: 2rem;
+        margin-bottom: 2rem;
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        flex-wrap: wrap;
+        gap: 1rem;
+      }
+
+      .header h1 {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #0369a1;
+        margin: 0;
+      }
+
+      .btn {
+        background: linear-gradient(135deg, #0ea5e9 0%, #0369a1 100%);
+        color: white;
+        padding: 0.75rem 1.5rem;
+        border-radius: 12px;
+        text-decoration: none;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        display: inline-flex;
+        align-items: center;
+        gap: 0.5rem;
+        box-shadow: 0 4px 15px rgba(14, 165, 233, 0.3);
+        border: none;
+        cursor: pointer;
+        font-size: 0.9rem;
+      }
+
+      .btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 8px 25px rgba(14, 165, 233, 0.4);
+      }
+
+      .btn-secondary {
+        background: linear-gradient(135deg, #10b981, #059669);
+        box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+      }
+
+      .btn-secondary:hover {
+        box-shadow: 0 8px 25px rgba(16, 185, 129, 0.4);
+      }
+
+      .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+      }
+
+      .stat-card {
+        background: white;
+        border-radius: 15px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        padding: 1.5rem;
+        text-align: center;
+      }
+
+      .stat-number {
+        font-size: 2.5rem;
+        font-weight: 700;
+        color: #0369a1;
+        margin-bottom: 0.5rem;
+      }
+
+      .stat-label {
+        color: #64748b;
+        font-weight: 500;
+      }
+
+      .section {
+        background: white;
+        border-radius: 20px;
+        box-shadow: 0 25px 50px rgba(0, 0, 0, 0.1);
+        padding: 2rem;
+        margin-bottom: 2rem;
+      }
+
+      .section h2 {
+        font-size: 1.5rem;
+        font-weight: 600;
+        color: #0369a1;
+        margin-bottom: 1.5rem;
+        border-bottom: 2px solid #e0f2fe;
+        padding-bottom: 0.5rem;
+      }
+
+      .table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 1rem;
+      }
+
+      .table th,
+      .table td {
+        padding: 0.75rem;
+        text-align: left;
+        border-bottom: 1px solid #e2e8f0;
+      }
+
+      .table th {
+        background-color: #f8fafc;
+        font-weight: 600;
+        color: #374151;
+      }
+
+      .table tr:hover {
+        background-color: #f8fafc;
+      }
+
+      .alert {
+        padding: 1rem;
+        border-radius: 12px;
+        margin-bottom: 1rem;
+        font-weight: 500;
+      }
+
+      .alert-success {
+        background-color: #d1fae5;
+        color: #065f46;
+        border: 1px solid #a7f3d0;
+      }
+
+      .alert-error {
+        background-color: #fee2e2;
+        color: #991b1b;
+        border: 1px solid #fca5a5;
+      }
+
+      .actions {
+        display: flex;
+        gap: 1rem;
+        flex-wrap: wrap;
+        margin-bottom: 1rem;
+      }
+
+      @media (max-width: 768px) {
+        .header {
+          flex-direction: column;
+          text-align: center;
+        }
+
+        .actions {
+          width: 100%;
+          justify-content: center;
+        }
+
+        .table {
+          font-size: 0.875rem;
+        }
+
+        .table th,
+        .table td {
+          padding: 0.5rem;
+        }
+      }
+
+      .pencacah-summary {
+        margin-bottom: 2rem;
+      }
+
+      .summary-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+        gap: 1rem;
+        margin-bottom: 1.5rem;
+      }
+
+      .summary-card {
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        border-radius: 12px;
+        padding: 1.5rem;
+        text-align: center;
+        border: 1px solid #e2e8f0;
+      }
+
+      .summary-number {
+        font-size: 2rem;
+        font-weight: 700;
+        color: #059669;
+        margin-bottom: 0.5rem;
+      }
+
+      .summary-label {
+        color: #64748b;
+        font-weight: 500;
+        font-size: 0.9rem;
+      }
+
+      .pencacah-name {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+      }
+
+      .badge {
+        display: inline-block;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.875rem;
+        font-weight: 600;
+        text-align: center;
+      }
+
+      .badge-primary {
+        background-color: #dbeafe;
+        color: #1e40af;
+      }
+
+      .percentage-bar {
+        position: relative;
+        background-color: #f1f5f9;
+        border-radius: 10px;
+        height: 24px;
+        overflow: hidden;
+        min-width: 100px;
+      }
+
+      .percentage-fill {
+        background: linear-gradient(90deg, #10b981, #059669);
+        height: 100%;
+        border-radius: 10px;
+        transition: width 0.3s ease;
+      }
+
+      .percentage-text {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #374151;
+        z-index: 1;
+      }
+
+      .productivity-indicator {
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        text-align: center;
+      }
+
+      .productivity-indicator.high {
+        background-color: #d1fae5;
+        color: #065f46;
+      }
+
+      .productivity-indicator.medium {
+        background-color: #fef3c7;
+        color: #92400e;
+      }
+
+      .productivity-indicator.low {
+        background-color: #fee2e2;
+        color: #991b1b;
+      }
+
+      @media (max-width: 768px) {
+        .summary-cards {
+          grid-template-columns: 1fr;
+        }
+        
+        .percentage-bar {
+          min-width: 80px;
+        }
+        
+        .productivity-indicator {
+          font-size: 0.7rem;
+          padding: 0.2rem 0.5rem;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <!-- Header -->
+      <div class="header">
+        <h1>Rekap Database Pendataan</h1>
+        <div class="actions">
+          {% if session.role == 'admin' %}
+          <a href="{{ url_for('main.download_excel') }}" class="btn btn-secondary">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 10v6m0 0l-3-3m3 3l3-3m2 8H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            Download Excel
+          </a>
+          {% endif %}
+          <a href="{{ url_for('main.dashboard') }}" class="btn">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+            </svg>
+            Kembali ke Dashboard
+          </a>
+        </div>
+      </div>
+
+      <!-- Alerts -->
+      {% if success %}
+      <div class="alert alert-success">
+        {{ success }}
+      </div>
+      {% endif %}
+
+      {% if error %}
+      <div class="alert alert-error">
+        {{ error }}
+      </div>
+      {% endif %}
+
+      <!-- Statistics Overview -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-number">{{ total_families }}</div>
+          <div class="stat-label">Total Keluarga</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">{{ total_individuals }}</div>
+          <div class="stat-label">Total Individu</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-number">{{ (total_individuals / total_families) | round(1) if total_families > 0 else 0 }}</div>
+          <div class="stat-label">Rata-rata Anggota/Keluarga</div>
+        </div>
+      </div>
+
+      <!-- Data by Dusun -->
+      <div class="section">
+        <h2>Rekap Data per Dusun</h2>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Dusun</th>
+              <th>Jumlah Keluarga</th>
+              <th>Total Anggota</th>
+              <th>Anggota Usia 15+</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for stat in dusun_stats %}
+            <tr>
+              <td>{{ stat.dusun }}</td>
+              <td>{{ stat.jumlah_keluarga }}</td>
+              <td>{{ stat.total_anggota }}</td>
+              <td>{{ stat.total_anggota_15plus }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Data by RT/RW -->
+      <div class="section">
+        <h2>Rekap Data per RT/RW</h2>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>RT</th>
+              <th>RW</th>
+              <th>Jumlah Keluarga</th>
+              <th>Total Anggota</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for stat in rt_rw_stats %}
+            <tr>
+              <td>{{ stat.rt }}</td>
+              <td>{{ stat.rw }}</td>
+              <td>{{ stat.jumlah_keluarga }}</td>
+              <td>{{ stat.total_anggota }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Employment Statistics -->
+      <div class="section">
+        <h2>Statistik Pekerjaan</h2>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Status Pekerjaan</th>
+              <th>Jumlah</th>
+              <th>Persentase</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for stat in employment_stats %}
+            <tr>
+              <td>{{ stat.memiliki_pekerjaan or 'Tidak Diisi' }}</td>
+              <td>{{ stat.jumlah }}</td>
+              <td>{{ ((stat.jumlah / total_individuals) * 100) | round(1) if total_individuals > 0 else 0 }}%</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Education Statistics -->
+      <div class="section">
+        <h2>Statistik Pendidikan</h2>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Pendidikan Terakhir</th>
+              <th>Jumlah</th>
+              <th>Persentase</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for stat in education_stats %}
+            <tr>
+              <td>{{ stat.pendidikan_terakhir or 'Tidak Diisi' }}</td>
+              <td>{{ stat.jumlah }}</td>
+              <td>{{ ((stat.jumlah / total_individuals) * 100) | round(1) if total_individuals > 0 else 0 }}%</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pencacah Statistics -->
+      <div class="section">
+        <h2>Statistik Pencacah</h2>
+        <div class="pencacah-summary">
+          <div class="summary-cards">
+            <div class="summary-card">
+              <div class="summary-number">{{ pencacah_stats|length }}</div>
+              <div class="summary-label">Total Pencacah Aktif</div>
+            </div>
+            <div class="summary-card">
+              <div class="summary-number">{{ (total_families / pencacah_stats|length) | round(1) if pencacah_stats|length > 0 else 0 }}</div>
+              <div class="summary-label">Rata-rata Keluarga/Pencacah</div>
+            </div>
+          </div>
+        </div>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>Nama Pencacah</th>
+              <th>Jumlah Keluarga</th>
+              <th>Total Anggota</th>
+              <th>Anggota Usia 15+</th>
+              <th>Persentase dari Total</th>
+              <th>Produktivitas</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for stat in pencacah_stats %}
+            <tr>
+              <td>
+                <div class="pencacah-name">
+                  <strong>{{ stat.nama_pencacah or 'Tidak Diisi' }}</strong>
+                </div>
+              </td>
+              <td>
+                <span class="badge badge-primary">{{ stat.jumlah_keluarga }}</span>
+              </td>
+              <td>{{ stat.total_anggota }}</td>
+              <td>{{ stat.total_anggota_15plus }}</td>
+              <td>
+                <div class="percentage-bar">
+                  <div class="percentage-fill" style="width: {{ ((stat.jumlah_keluarga / total_families) * 100) if total_families > 0 else 0 }}%"></div>
+                  <span class="percentage-text">{{ ((stat.jumlah_keluarga / total_families) * 100) | round(1) if total_families > 0 else 0 }}%</span>
+                </div>
+              </td>
+              <td>
+                {% set avg_members = (stat.total_anggota / stat.jumlah_keluarga) | round(1) if stat.jumlah_keluarga > 0 else 0 %}
+                <span class="productivity-indicator 
+                  {% if avg_members >= 4 %}high{% elif avg_members >= 3 %}medium{% else %}low{% endif %}">
+                  {{ avg_members }} anggota/keluarga
+                </span>
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Recent Entries -->
+      <div class="section">
+        <h2>Data Terbaru (10 Terakhir)</h2>
+        <table class="table">
+          <thead>
+            <tr>
+              <th>ID Keluarga</th>
+              <th>Nama Kepala</th>
+              <th>Dusun</th>
+              <th>RT/RW</th>
+              <th>Jumlah Anggota</th>
+              <th>Tanggal Input</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for family in recent_families %}
+            <tr>
+              <td>{{ family.keluarga_id }}</td>
+              <td>{{ family.nama_kepala }}</td>
+              <td>{{ family.dusun }}</td>
+              <td>{{ family.rt }}/{{ family.rw }}</td>
+              <td>{{ family.jumlah_anggota }}</td>
+              <td>{{ family.created_at.strftime('%d-%m-%Y %H:%M') if family.created_at else '-' }}</td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <script>
+      // Auto refresh every 5 minutes
+      setInterval(function() {
+        const indicator = document.createElement('div');
+        indicator.className = 'refresh-indicator show';
+        indicator.textContent = '🔄 Memperbarui data...';
+        document.body.appendChild(indicator);
+        
+        setTimeout(() => {
+          location.reload();
+        }, 2000);
+      }, 300000); // 5 minutes
+
+      // Add loading animation for tables
+      document.addEventListener('DOMContentLoaded', function() {
+        const tables = document.querySelectorAll('.stats-table');
+        tables.forEach(table => {
+          table.style.opacity = '0';
+          table.style.transform = 'translateY(20px)';
+          
+          setTimeout(() => {
+            table.style.transition = 'all 0.5s ease';
+            table.style.opacity = '1';
+            table.style.transform = 'translateY(0)';
+          }, 100);
+        });
+      });
+    </script>
+
+    <style>
+      .refresh-indicator {
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: #28a745;
+        color: white;
+        padding: 10px 15px;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        opacity: 0;
+        transition: opacity 0.3s ease;
+      }
+
+      .refresh-indicator.show {
+        opacity: 1;
+      }
+    </style>
+  </body>
+</html>

@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Daftar Keluarga - Pendataan Sidokepung</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: {
+                            50: "#f0f9ff",
+                            100: "#e0f2fe",
+                            200: "#bae6fd",
+                            300: "#7dd3fc",
+                            400: "#38bdf8",
+                            500: "#0ea5e9",
+                            600: "#0284c7",
+                            700: "#0369a1",
+                            800: "#075985",
+                            900: "#0c4a6e",
+                            950: "#082f49",
+                        },
+                    },
+                },
+            },
+        };
+    </script>
+    <style>
+        .family-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+            border: 1px solid #e5e7eb;
+        }
+
+        .family-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+        }
+
+        .search-input {
+            transition: all 0.3s ease;
+            border-radius: 12px;
+            border: 2px solid #e5e7eb;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #0ea5e9;
+            box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.1);
+        }
+
+        .edit-btn {
+            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
+            transition: all 0.3s ease;
+        }
+
+        .edit-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(243, 156, 18, 0.4);
+        }
+
+        .delete-btn {
+            background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
+            transition: all 0.3s ease;
+        }
+
+        .delete-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(231, 76, 60, 0.4);
+        }
+
+        .back-btn {
+            background: linear-gradient(135deg, #6b7280 0%, #4b5563 100%);
+            transition: all 0.3s ease;
+        }
+
+        .back-btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 15px rgba(107, 114, 128, 0.4);
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-primary-50 to-primary-100 min-h-screen py-4 sm:py-8 px-2 sm:px-4">
+    <div class="container mx-auto max-w-6xl">
+        <!-- Header -->
+        <div class="bg-white rounded-2xl shadow-lg p-4 sm:p-6 mb-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h1 class="text-2xl sm:text-3xl font-bold text-gray-800 mb-2">📋 Daftar Keluarga</h1>
+                    <p class="text-gray-600">Pilih keluarga yang ingin diedit</p>
+                </div>
+                <a href="{{ url_for('main.dashboard') }}" class="back-btn text-white font-medium py-2 px-4 rounded-lg transition duration-300 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                    </svg>
+                    Kembali
+                </a>
+            </div>
+        </div>
+
+        <!-- Success/Error Messages -->
+        {% if success %}
+        <div class="bg-green-100 border-l-4 border-green-500 text-green-700 p-4 rounded-lg mb-6" role="alert">
+            <div class="flex items-start">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-green-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="font-bold">Berhasil!</p>
+                    <p>{{ success }}</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        {% if error %}
+        <div class="bg-red-100 border-l-4 border-red-500 text-red-700 p-4 rounded-lg mb-6" role="alert">
+            <div class="flex items-start">
+                <div class="flex-shrink-0">
+                    <svg class="h-5 w-5 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                    </svg>
+                </div>
+                <div class="ml-3">
+                    <p class="font-bold">Error!</p>
+                    <p>{{ error }}</p>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Search and Filter -->
+        <div class="bg-white rounded-2xl shadow-lg p-4 sm:p-6 mb-6">
+            <div class="flex flex-col sm:flex-row gap-4">
+                <div class="flex-1">
+                    <input type="text" id="searchInput" placeholder="Cari berdasarkan nama kepala keluarga, RT, RW, atau dusun..." 
+                           class="search-input w-full px-4 py-3 text-sm">
+                </div>
+                <div class="flex gap-2">
+                    <select id="dusunFilter" class="search-input px-4 py-3 text-sm bg-white">
+                        <option value="">Semua Dusun</option>
+                        <option value="Sidopurno1">Sidopurno 1</option>
+                        <option value="Sidopurno2">Sidopurno 2</option>
+                        <option value="Mlaten">Mlaten</option>
+                        <option value="Ngepung">Ngepung</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- Statistics -->
+        <div class="bg-white rounded-2xl shadow-lg p-4 sm:p-6 mb-6">
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-blue-600">{{ families|length }}</div>
+                    <div class="text-sm text-gray-600">Total Keluarga</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-green-600">{{ total_individuals }}</div>
+                    <div class="text-sm text-gray-600">Total Individu</div>
+                </div>
+                <div class="text-center">
+                    <div class="text-2xl font-bold text-purple-600" id="filteredCount">{{ families|length }}</div>
+                    <div class="text-sm text-gray-600">Hasil Filter</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Family List -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6" id="familyList">
+            {% for family in families %}
+            <div class="family-card p-4 sm:p-6 family-item" 
+                 data-search="{{ family.nama_kepala|lower }} {{ family.rt }} {{ family.rw }} {{ family.dusun|lower }} {{ family.alamat|lower }}"
+                 data-dusun="{{ family.dusun }}">
+                
+                <!-- Family Header -->
+                <div class="flex items-start justify-between mb-4">
+                    <div class="flex-1">
+                        <h3 class="text-lg font-bold text-gray-800 mb-1">{{ family.nama_kepala }}</h3>
+                        <p class="text-sm text-gray-600">ID: {{ family.keluarga_id }}</p>
+                    </div>
+                    <div class="text-right">
+                        <span class="inline-block bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded-full">
+                            {{ family.dusun }}
+                        </span>
+                    </div>
+                </div>
+
+                <!-- Family Details -->
+                <div class="space-y-2 mb-4">
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-600">RT/RW:</span>
+                        <span class="font-medium">{{ family.rt }}/{{ family.rw }}</span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-600">Alamat:</span>
+                        <span class="font-medium text-right">{{ family.alamat[:30] }}{% if family.alamat|length > 30 %}...{% endif %}</span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-600">Anggota:</span>
+                        <span class="font-medium">{{ family.jumlah_anggota }} orang</span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-600">Usia 15+:</span>
+                        <span class="font-medium">{{ family.anggota|length }} orang</span>
+                    </div>
+                    <div class="flex justify-between text-sm">
+                        <span class="text-gray-600">Pencacah:</span>
+                        <span class="font-medium">{{ family.nama_pencacah or '-' }}</span>
+                    </div>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex gap-2">
+                    <a href="{{ url_for('main.edit_family_db', family_id=family.id) }}" 
+                       class="edit-btn flex-1 text-white text-center font-medium py-2 px-3 rounded-lg transition duration-300 flex items-center justify-center text-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                        </svg>
+                        Edit
+                    </a>
+                    {% if session.role == 'admin' %}
+                    <button onclick="confirmDelete('{{ family.id }}', '{{ family.nama_kepala }}')" 
+                            class="delete-btn text-white font-medium py-2 px-3 rounded-lg transition duration-300 flex items-center justify-center text-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                        </svg>
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+
+        <!-- Empty State -->
+        <div id="emptyState" class="hidden text-center py-12">
+            <div class="text-6xl mb-4">🔍</div>
+            <h3 class="text-xl font-semibold text-gray-700 mb-2">Tidak ada data yang ditemukan</h3>
+            <p class="text-gray-500">Coba ubah kata kunci pencarian atau filter</p>
+        </div>
+
+        <!-- No Data State -->
+        {% if not families %}
+        <div class="text-center py-12">
+            <div class="text-6xl mb-4">📝</div>
+            <h3 class="text-xl font-semibold text-gray-700 mb-2">Belum ada data keluarga</h3>
+            <p class="text-gray-500 mb-4">Mulai dengan menambahkan data keluarga baru</p>
+            <a href="{{ url_for('main.index') }}" class="edit-btn text-white font-medium py-2 px-4 rounded-lg transition duration-300 inline-flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4"/>
+                </svg>
+                Tambah Data Baru
+            </a>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+        <div class="bg-white rounded-2xl p-6 max-w-md w-full">
+            <div class="text-center">
+                <div class="text-4xl mb-4">⚠️</div>
+                <h3 class="text-lg font-semibold text-gray-800 mb-2">Konfirmasi Hapus</h3>
+                <p class="text-gray-600 mb-6">Apakah Anda yakin ingin menghapus data keluarga <strong id="familyNameToDelete"></strong>? Tindakan ini tidak dapat dibatalkan.</p>
+                <div class="flex gap-3">
+                    <button onclick="closeDeleteModal()" class="flex-1 bg-gray-300 text-gray-700 font-medium py-2 px-4 rounded-lg hover:bg-gray-400 transition duration-300">
+                        Batal
+                    </button>
+                    <button onclick="deleteFamily()" class="flex-1 bg-red-500 text-white font-medium py-2 px-4 rounded-lg hover:bg-red-600 transition duration-300">
+                        Hapus
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let familyToDelete = null;
+
+        // Search and filter functionality
+        document.getElementById('searchInput').addEventListener('input', filterFamilies);
+        document.getElementById('dusunFilter').addEventListener('change', filterFamilies);
+
+        function filterFamilies() {
+            const searchTerm = document.getElementById('searchInput').value.toLowerCase();
+            const dusunFilter = document.getElementById('dusunFilter').value;
+            const familyItems = document.querySelectorAll('.family-item');
+            const emptyState = document.getElementById('emptyState');
+            const familyList = document.getElementById('familyList');
+            let visibleCount = 0;
+
+            familyItems.forEach(item => {
+                const searchData = item.getAttribute('data-search');
+                const dusunData = item.getAttribute('data-dusun');
+                
+                const matchesSearch = searchData.includes(searchTerm);
+                const matchesDusun = !dusunFilter || dusunData === dusunFilter;
+                
+                if (matchesSearch && matchesDusun) {
+                    item.style.display = 'block';
+                    visibleCount++;
+                } else {
+                    item.style.display = 'none';
+                }
+            });
+
+            // Update filtered count
+            document.getElementById('filteredCount').textContent = visibleCount;
+
+            // Show/hide empty state
+            if (visibleCount === 0) {
+                familyList.style.display = 'none';
+                emptyState.classList.remove('hidden');
+            } else {
+                familyList.style.display = 'grid';
+                emptyState.classList.add('hidden');
+            }
+        }
+
+        // Delete functionality
+        function confirmDelete(familyId, familyName) {
+            familyToDelete = familyId;
+            document.getElementById('familyNameToDelete').textContent = familyName;
+            document.getElementById('deleteModal').classList.remove('hidden');
+        }
+
+        function closeDeleteModal() {
+            familyToDelete = null;
+            document.getElementById('deleteModal').classList.add('hidden');
+        }
+
+        function deleteFamily() {
+            if (familyToDelete) {
+                // Create form and submit
+                const form = document.createElement('form');
+                form.method = 'POST';
+                form.action = `/delete-family/${familyToDelete}`;
+                
+                // Add CSRF token if needed
+                const csrfToken = document.querySelector('meta[name="csrf-token"]');
+                if (csrfToken) {
+                    const csrfInput = document.createElement('input');
+                    csrfInput.type = 'hidden';
+                    csrfInput.name = 'csrf_token';
+                    csrfInput.value = csrfToken.getAttribute('content');
+                    form.appendChild(csrfInput);
+                }
+                
+                document.body.appendChild(form);
+                form.submit();
+            }
+        }
+
+        // Close modal when clicking outside
+        document.getElementById('deleteModal').addEventListener('click', function(e) {
+            if (e.target === this) {
+                closeDeleteModal();
+            }
+        });
+    </script>
+</body>
+</html>

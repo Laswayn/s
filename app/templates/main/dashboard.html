@@ -1,0 +1,326 @@
+{% extends "base.html" %}
+
+{% block title %}Dashboard - Sensus Penduduk{% endblock %}
+
+{% block content %}
+<div class="dashboard-container">
+    <div class="dashboard-header">
+        <h1>📊 Dashboard Sensus</h1>
+        <div class="user-info">
+            <span class="welcome-text">Selamat datang, <strong>{{ session.username }}</strong></span>
+            <span class="role-badge role-{{ session.role }}">{{ session.role.title() }}</span>
+        </div>
+    </div>
+
+    <div class="dashboard-grid">
+        <!-- Input Data Baru -->
+        <div class="dashboard-card">
+            <div class="card-icon">📝</div>
+            <h3>Input Data Baru</h3>
+            <p>Mulai input data keluarga dan anggota keluarga baru</p>
+            <a href="{{ url_for('main.index') }}" class="btn btn-primary">
+                <i class="icon">▶️</i> Mulai Input
+            </a>
+        </div>
+
+        <!-- Edit Data Keluarga -->
+        <div class="dashboard-card">
+            <div class="card-icon">✏️</div>
+            <h3>Edit Data Keluarga</h3>
+            <p>Edit dan update data keluarga yang sudah tersimpan</p>
+            <a href="{{ url_for('main.list_families') }}" class="btn btn-warning">
+                <i class="icon">✏️</i> Edit Data
+            </a>
+        </div>
+
+        <!-- Rekap Database -->
+        <div class="dashboard-card">
+            <div class="card-icon">📈</div>
+            <h3>Rekap Database</h3>
+            <p>Lihat statistik dan ringkasan data yang telah diinput</p>
+            <a href="{{ url_for('main.rekap') }}" class="btn btn-info">
+                <i class="icon">📊</i> Lihat Rekap
+            </a>
+        </div>
+
+        <!-- Export Excel (Admin Only) -->
+        {% if session.role == 'admin' %}
+        <div class="dashboard-card">
+            <div class="card-icon">📄</div>
+            <h3>Export Excel</h3>
+            <p>Download semua data dalam format Excel untuk analisis</p>
+            <a href="{{ url_for('main.download_excel') }}" class="btn btn-success">
+                <i class="icon">⬇️</i> Download Excel
+            </a>
+        </div>
+        {% endif %}
+
+        <!-- Logout -->
+        <div class="dashboard-card logout-card">
+            <div class="card-icon">🚪</div>
+            <h3>Keluar</h3>
+            <p>Keluar dari sistem sensus</p>
+            <a href="{{ url_for('auth.logout') }}" class="btn btn-danger">
+                <i class="icon">🔓</i> Logout
+            </a>
+        </div>
+    </div>
+
+    <!-- Quick Stats (if available) -->
+    <div class="quick-stats">
+        <div class="stats-header">
+            <h2>📊 Statistik Cepat</h2>
+        </div>
+        <div class="stats-grid">
+            <div class="stat-item">
+                <div class="stat-number" id="total-families">-</div>
+                <div class="stat-label">Total Keluarga</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="total-individuals">-</div>
+                <div class="stat-label">Total Individu</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number" id="last-update">-</div>
+                <div class="stat-label">Update Terakhir</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+.dashboard-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.dashboard-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 30px;
+    padding: 20px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    border-radius: 15px;
+    color: white;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+}
+
+.dashboard-header h1 {
+    margin: 0;
+    font-size: 2rem;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.welcome-text {
+    font-size: 1.1rem;
+}
+
+.role-badge {
+    padding: 5px 15px;
+    border-radius: 20px;
+    font-size: 0.9rem;
+    font-weight: bold;
+    text-transform: uppercase;
+}
+
+.role-admin {
+    background: #ff6b6b;
+    color: white;
+}
+
+.role-user {
+    background: #4ecdc4;
+    color: white;
+}
+
+.dashboard-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 25px;
+    margin-bottom: 40px;
+}
+
+.dashboard-card {
+    background: white;
+    border-radius: 15px;
+    padding: 30px;
+    text-align: center;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    border: 1px solid #e1e8ed;
+}
+
+.dashboard-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 30px rgba(0,0,0,0.15);
+}
+
+.card-icon {
+    font-size: 3rem;
+    margin-bottom: 15px;
+}
+
+.dashboard-card h3 {
+    margin: 0 0 10px 0;
+    color: #2c3e50;
+    font-size: 1.3rem;
+}
+
+.dashboard-card p {
+    color: #7f8c8d;
+    margin-bottom: 20px;
+    line-height: 1.5;
+}
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 12px 24px;
+    border: none;
+    border-radius: 8px;
+    text-decoration: none;
+    font-weight: 600;
+    transition: all 0.3s ease;
+    cursor: pointer;
+    font-size: 1rem;
+}
+
+.btn-primary {
+    background: #3498db;
+    color: white;
+}
+
+.btn-primary:hover {
+    background: #2980b9;
+    transform: scale(1.05);
+}
+
+.btn-warning {
+    background: #f39c12;
+    color: white;
+}
+
+.btn-warning:hover {
+    background: #e67e22;
+    transform: scale(1.05);
+}
+
+.btn-info {
+    background: #17a2b8;
+    color: white;
+}
+
+.btn-info:hover {
+    background: #138496;
+    transform: scale(1.05);
+}
+
+.btn-success {
+    background: #28a745;
+    color: white;
+}
+
+.btn-success:hover {
+    background: #218838;
+    transform: scale(1.05);
+}
+
+.btn-danger {
+    background: #dc3545;
+    color: white;
+}
+
+.btn-danger:hover {
+    background: #c82333;
+    transform: scale(1.05);
+}
+
+.logout-card {
+    border: 2px solid #dc3545;
+}
+
+.quick-stats {
+    background: white;
+    border-radius: 15px;
+    padding: 30px;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+}
+
+.stats-header {
+    text-align: center;
+    margin-bottom: 25px;
+}
+
+.stats-header h2 {
+    margin: 0;
+    color: #2c3e50;
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.stat-item {
+    text-align: center;
+    padding: 20px;
+    background: #f8f9fa;
+    border-radius: 10px;
+    border: 1px solid #e9ecef;
+}
+
+.stat-number {
+    font-size: 2.5rem;
+    font-weight: bold;
+    color: #3498db;
+    margin-bottom: 5px;
+}
+
+.stat-label {
+    color: #6c757d;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+
+@media (max-width: 768px) {
+    .dashboard-header {
+        flex-direction: column;
+        gap: 15px;
+        text-align: center;
+    }
+    
+    .dashboard-grid {
+        grid-template-columns: 1fr;
+    }
+    
+    .stats-grid {
+        grid-template-columns: 1fr;
+    }
+}
+</style>
+
+<script>
+// Load quick stats
+document.addEventListener('DOMContentLoaded', function() {
+    // You can add AJAX calls here to load real-time stats
+    // For now, we'll show placeholder values
+    
+    // Simulate loading stats
+    setTimeout(() => {
+        document.getElementById('total-families').textContent = '...';
+        document.getElementById('total-individuals').textContent = '...';
+        document.getElementById('last-update').textContent = 'Hari ini';
+    }, 500);
+});
+</script>
+{% endblock %}
